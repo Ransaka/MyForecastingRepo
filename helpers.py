@@ -1,3 +1,5 @@
+from itertools import product
+import numpy as np
 from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
 from statsmodels.tsa.stattools import adfuller
 import matplotlib.pyplot as plt 
@@ -6,7 +8,9 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from tqdm import tqdm
 from sklearn.metrics import mean_absolute_percentage_error as MAPE 
 import holidays 
+from prophet import Prophet
 from datetime import date
+from prophet.diagnostics import cross_validation,performance_metrics
 
 PC = '#FF3B2B'
 
@@ -167,4 +171,26 @@ def plotSARIMA(model,train,test):
     plt.ylabel("Views (Mn)",fontfamily='serif')
     plt.title(f"Predictions vs Observed\n MAPE:{MAPE(test,predictions)*100:.3f}%", fontsize=18,fontweight='semibold',fontfamily='serif')
     plt.grid(True)
+    plt.show()
+
+def optimizeProphet(param_grid,train,initial,period,horizon):
+    args = list(product(*param_grid.values()))
+    df_ps = pd.DataFrame()
+    for arg in tqdm(args):
+        kwargs = dict(zip(param_grid.keys(),arg))
+        m = Prophet(**kwargs).fit(train)
+        df_cv = cross_validation(m, initial=initial, period=period, horizon = horizon)
+        df_p = performance_metrics(df_cv, rolling_window=1)
+        df_p['params'] = str(arg)
+        df_ps = df_ps.append(df_p)
+    df_ps['mae+rmse'] = df_ps['mae']+df_ps['rmse']
+    df_ps = df_ps.sort_values(['mae+rmse'])
+    return df_ps,df_p,df_cv
+
+def plot_ts_cluster_results(usage,j,n):
+    plt.figure(figsize=(15,7))
+    for x,i in zip(usage,np.linspace(0.1,1,n)):
+        plt.plot(x,alpha=i,linewidth=3,color='#007E9A')
+
+    plt.title(f'Clustering results: Cluster 0{j+1}',fontfamily='serif',fontsize='17',fontweight='semibold')
     plt.show()
