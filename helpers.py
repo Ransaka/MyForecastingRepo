@@ -187,10 +187,13 @@ def optimizeProphet(param_grid,train,initial,period,horizon):
     df_ps = df_ps.sort_values(['mae+rmse'])
     return df_ps,df_p,df_cv
 
-def plot_ts_cluster_results(usage,j,n):
+def plot_ts_cluster_results(usage,j,n,plot_mean=False):
     plt.figure(figsize=(15,7))
+    if plot_mean:mean_usage=np.array(usage).transpose().mean(axis=1)
     for x,i in zip(usage,np.linspace(0.1,1,n)):
         plt.plot(x,alpha=i,linewidth=3,color='#007E9A')
+
+    if plot_mean:plt.plot(mean_usage,alpha=0.9,linewidth=3,color='k',linestyle='--')
 
     plt.title(f'Clustering results: Cluster 0{j+1}',fontfamily='serif',fontsize='17',fontweight='semibold')
     plt.show()
