@@ -1,15 +1,17 @@
-from itertools import product
+
+import holidays
 import numpy as np
-from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
-from statsmodels.tsa.stattools import adfuller
-import matplotlib.pyplot as plt 
 import pandas as pd 
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 from tqdm import tqdm
-from sklearn.metrics import mean_absolute_percentage_error as MAPE 
-import holidays 
-from prophet import Prophet
 from datetime import date
+from prophet import Prophet
+from itertools import product
+import matplotlib.pyplot as plt 
+from statsmodels.tsa.stattools import adfuller
+from sklearn.metrics import mean_absolute_error as MAE 
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
+from sklearn.metrics import mean_absolute_percentage_error as MAPE 
 from prophet.diagnostics import cross_validation,performance_metrics
 
 PC = '#FF3B2B'
@@ -141,9 +143,11 @@ def is_weekend(df):
     df['weekend'] = df['weekend'].apply(lambda x:1 if x in['Saturday','Sunday'] else 0)
     return df
 
-def plot_predictions(observed,predicted):
-
-    error = "{0:.3f}%".format(MAPE(observed,predicted)*100)
+def plot_predictions(observed,predicted,metric='MAPE'):
+    if metric=='MAPE':
+        error = "MAPE: {0:.3f}%".format(MAPE(observed,predicted)*100)
+    else:
+        error = "MAE: {0:.3f}".format(MAE(observed,predicted))
 
     plt.figure(figsize=(15,7))
     plt.plot(observed,color='black',label='oberved')
@@ -151,7 +155,7 @@ def plot_predictions(observed,predicted):
     plt.legend(loc='upper center')
     plt.xlabel("Date",fontfamily='serif')
     plt.ylabel("Views (Mn)",fontfamily='serif')
-    plt.title(f"Predictions vs Observed\nMAPE={error}", fontsize=18,fontweight='semibold',fontfamily='serif')
+    plt.title(f"Predictions vs Observed\n{error}", fontsize=18,fontweight='semibold',fontfamily='serif')
     plt.grid(True)
     plt.show()
 
